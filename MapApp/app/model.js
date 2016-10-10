@@ -8,7 +8,7 @@ var UserSchema = new Schema({
 	gender: {type: String, required: true},
 	age: {type: Number, required: true},
 	favlang: {type: String, required: true},
-	location: {type: [Number], required: true}, //[Lat, Lng]
+	location: {type: [Number], required: true}, //[Long, Lat]
 	htmlverified: String,
 	created_at: {type: Date, default: Date.now},
 	updated_at: {type: Date, default: Date.now}
@@ -28,4 +28,4 @@ UserSchema.pre('save', function(next){
 UserSchema.index({location: '2dsphere'});
 
 //Exports the UserSchema for use elsewhere. Sets the mongodb collection to used as: "mean-user"
-module.exports = mongoose.model('mean-user', UserSchema);
+module.exports = mongoose.model('mean-users', UserSchema);
