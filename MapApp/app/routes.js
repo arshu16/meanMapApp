@@ -33,6 +33,70 @@ module.exports = function(app) {
 			//if no errors are found, it responds with the JSON of the new user
 			res.json(req.body);
 		});
+	});
 
+	// Retrieves JSON records for all users who meet a certain set of query conditions
+	app.post('/query/', function(req,res){
+		var lat = req.body.latitude,
+			long = req.body.longitude,
+			distance = req.body.distance,
+			male = req.body.male,
+    		female = req.body.female,
+    		other = req.body.other,
+    		minAge = req.body.minAge,
+    		maxAge = req.body.maxAge,
+    		favLang = req.body.favlang,
+    		reqVerified = req.body.reqVerified;
+
+		// Opens a generic Mongoose Query. Depending on the post body we will...
+		var query = User.find({});
+
+		// ...include filter by Max Distance (converting miles to meters)
+		if(distance) {
+			// Using MongoDB's geospatial querying features.
+			query = query.where('location').near({
+				center: {
+					type: 'Point',
+					coordinates: [long, lat]
+				},
+				maxDistance: distance * 1609.34, // Converting meters to miles. 
+				spherical: true//Specifying spherical geometry (for globe)
+			});
+		}
+
+		// ...include filter by Gender (all options)
+	    if(male || female || other){
+	        query.or([{ 'gender': male }, { 'gender': female }, {'gender': other}]);
+	    }
+
+	    // ...include filter by Min Age
+	    if(minAge){
+	    	query = query.where('age').gte(minAge);
+	    }
+
+	    // ...include filter by Max Age
+	    if(maxAge){
+	        query = query.where('age').lte(maxAge);
+	    }
+
+	    // ...include filter by Favorite Language
+	    if(favLang){
+	        query = query.where('favlang').equals(favLang);
+	    }
+
+	     // ...include filter for HTML5 Verified Locations
+	    if(reqVerified){
+	        query = query.where('htmlverified').equals("Yep (Thanks for giving us real data!)");
+	    }
+
+
+
+		query.exec(function(err, users){
+			if(err) {
+				res.send(err);
+			} else {
+				res.json(users);
+			}
+		});
 	});
 };
